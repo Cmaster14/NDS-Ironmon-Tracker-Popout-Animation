@@ -87,7 +87,22 @@ MiscConstants.DEFAULT_SETTINGS = {
     },
     tourneyTracker = {
         ENABLED = false
-    }
+    },
+	animationPopout = {
+		ENABLED = false
+	},
+	animateLead = {
+		ENABLED = true
+	},
+	animateParty = {
+		ENABLED = false
+	},
+	animateHoriz = {
+		ENABLED = true
+	},
+	animateVert = {
+		ENABLED = false
+	},
 }
 
 MiscConstants.DEFAULT_POKEMON = {
