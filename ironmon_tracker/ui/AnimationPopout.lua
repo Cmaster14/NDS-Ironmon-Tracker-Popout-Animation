@@ -66,6 +66,10 @@ local function AnimationPopout(initialProgram, initialSettings)
 		forms.setproperty(box.formWindow, "Visible", true)
 	end
 	
+	function self.getMaxAni()
+		return maxAni
+	end
+	
 	local function getPathIfExists(filepath)
 		-- Empty filepaths "" can be opened successfully on Linux, as directories are considered files
 		if filepath == nil or filepath == "" then return nil end
@@ -180,12 +184,19 @@ local function AnimationPopout(initialProgram, initialSettings)
 	end
 	
 	local function setAnimatedPokemon(pokemonID, pos)
-		if pokemonID == nil or pokemonID == 0 then
+		if pokemonID == 0 then
 			return
+		elseif pokemonID == nil then
+			pokemonID = 0
 		end
-	
+		
 		if pokemonID ~= box.pokemonID[pos] then
 			local pokemonData = PokemonData.POKEMON[pokemonID+1]
+			local pbox = box.party[pos]
+			
+			if pokemonID == 0 then
+				forms.setproperty(pbox, "Visible", false)
+			end
 			
 			if pokemonData ~= nil then
 				-- Track this ID so we don't have to preform as many checks later
@@ -195,7 +206,6 @@ local function AnimationPopout(initialProgram, initialSettings)
 				local imagepath = Paths.FOLDERS.ANIMATIONS_FOLDER .. "\\" .. lowerPokemonName .. ".gif"
 				local fileExists = fileExists(imagepath)
 				if fileExists then
-					local pbox = box.party[pos]
 					forms.setproperty(pbox, "ImageLocation", imagepath)
 					forms.setproperty(pbox, "Visible", true)
 					if orientation == "H" or orientation == "S" then
@@ -212,39 +222,9 @@ local function AnimationPopout(initialProgram, initialSettings)
 		end
 	end
 	
-	local function setAnimatedPokemonByName(pokemonName, pos)
-		if pokemonName == nil or pokemonName == 0 then
-			return
-		end
-	
-		if pokemonName ~= box.pokemonID[pos] then
-			-- Track this ID so we don't have to preform as many checks later
-			box.pokemonID[pos] = pokemonName
-			local imagepath = Paths.FOLDERS.ANIMATIONS_FOLDER .. "\\" .. pokemonName .. ".gif"
-			local fileExists = fileExists(imagepath)
-			if fileExists then
-				local pbox = box.party[pos]
-				forms.setproperty(pbox, "ImageLocation", imagepath)
-				forms.setproperty(pbox, "Visible", true)
-				if orientation == "H" then
-					forms.setproperty(pbox, "Height", 1)
-				end
-				forms.setproperty(pbox, "AutoSize", 2)
-				forms.refresh(pbox)
-				partyChanged = true
-				relocate[pos] = true
-				box.pokemonNames[pos] = pokemonName
-			end
-		end
-	end
-	
-	function self.animateParty(playerParty, input)
+	function self.animateParty(playerParty)
 		for p=1, maxAni, 1 do
-			if input == "numbers" then
-				setAnimatedPokemon(playerParty[p], p)
-			elseif input == "names" then
-				setAnimatedPokemonByName(playerParty[p], p)
-			end
+			setAnimatedPokemon(playerParty[p], p)
 		end
 			
 	end

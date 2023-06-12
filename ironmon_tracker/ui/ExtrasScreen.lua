@@ -70,40 +70,39 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 		program.drawCurrentScreens()
 	end
 	
+	local function animationToggleUpdates()
+		program.drawCurrentScreens()
+		animatedPokemon.setupAnimatedPictureBox()
+		animatedPokemon.refreshAnimations()
+		program.forceAnimatedUpdateBypass()
+	end
+	
 	local function onLeadToggleClick(button)
 		if settings.animateParty.ENABLED or not settings.animateLead.ENABLED then
 			button.onClick()
 		end
-		program.drawCurrentScreens()
-		animatedPokemon.setupAnimatedPictureBox()
-		animatedPokemon.refreshAnimations()
+		animationToggleUpdates()
 	end
 	
 	local function onPartyToggleClick(button)
 		if settings.animateLead.ENABLED or not settings.animateParty.ENABLED then
 			button.onClick()
 		end
-		program.drawCurrentScreens()
-		animatedPokemon.setupAnimatedPictureBox()
-		animatedPokemon.refreshAnimations()
+		animationToggleUpdates()
 	end
 	
 	local function onHorizToggleClick(button)
 		if settings.animateVert.ENABLED or not settings.animateHoriz.ENABLED then
 			button.onClick()
 		end
-		program.drawCurrentScreens()
-		animatedPokemon.setupAnimatedPictureBox()
-		animatedPokemon.refreshAnimations()
+		animationToggleUpdates()
 	end
 	
 	local function onVertToggleClick(button)
 		if settings.animateHoriz.ENABLED or not settings.animateVert.ENABLED then
 			button.onClick()
 		end
-		program.drawCurrentScreens()
-		animatedPokemon.setupAnimatedPictureBox()
-		animatedPokemon.refreshAnimations()
+		animationToggleUpdates()
 	end
 
 	local function initBottomFrame()
