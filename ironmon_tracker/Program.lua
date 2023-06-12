@@ -395,15 +395,19 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 			pokemonDataReader.setCurrentBase(membase)
 			local mon = pokemonDataReader.decryptPokemonInfo(false, p-1, false)
 			if not ignoreValidation then
-				party[p] = mon.pokemonID
 				local id = mon.pokemonID
+				party[p] = id
 				if id == nil then
 					id = 0
 				end
 				partyCompare = partyCompare .. id
 			else
-				party[p] = playerParty[1][p]
-				partyCompare = partyCompare .. playerParty[1][p]
+				local playerMon = playerParty[1][p]
+				party[p] = playerMon
+				if playerMon == nil then
+					playerPokemon = 0
+				end
+				partyCompare = partyCompare .. playerMon
 			end
 			-- need to change currentBase in order to decrypt.
 			membase = membase + gameInfo.ENCRYPTED_POKEMON_SIZE
