@@ -3,7 +3,6 @@ local function AnimationPopout(initialProgram, initialSettings)
     local program = initialProgram
 	local settings = initialSettings
 	local created = false
-	local partyChanged = true
 	local orientation = "S"
 	local maxAni = 1
 	
@@ -16,21 +15,21 @@ local function AnimationPopout(initialProgram, initialSettings)
 
 	local box = {
 		TRANSPARENCY_COLOR = "Magenta",
-		POPUP_WIDTH = 200,
-		POPUP_HEIGHT = 200,
+		POPUP_WIDTH = 250,
+		POPUP_HEIGHT = 250,
 		formWindow = 0,
 		party = {0,0,0,0,0,0},
 		pokemonID = {0,0,0,0,0,0},
-		pokemonNames = {0,0,0,0,0,0}
-	}
+		maxMonWidth = 200
+	}	
 	
 	local relocate = {
-		false,
-		false,
-		false,
-		false,
-		false,
-		false
+		true,
+		true,
+		true,
+		true,
+		true,
+		true
 	}
 	
 	function self.getCreated()
@@ -47,14 +46,13 @@ local function AnimationPopout(initialProgram, initialSettings)
 		box.formWindow = 0
 		box.party = {0,0,0,0,0,0}
 		box.pokemonID = {0,0,0,0,0,0}
-		box.pokemonNames = {0,0,0,0,0,0}
 		relocate = {
-			false,
-			false,
-			false,
-			false,
-			false,
-			false
+			true,
+			true,
+			true,
+			true,
+			true,
+			true
 		}
 	end
 	
@@ -101,33 +99,33 @@ local function AnimationPopout(initialProgram, initialSettings)
 	
 	local function setOrientation(newOrientation)
 		if newOrientation == "S" then
-			box.POPUP_WIDTH = 200
-			box.POPUP_HEIGHT = 200
+			box.POPUP_WIDTH = 250
+			box.POPUP_HEIGHT = 250
 			orientation = "S"
 		end
 		if newOrientation == "H" then
-			box.POPUP_WIDTH = 750
+			box.POPUP_WIDTH = 1400
 			box.POPUP_HEIGHT = 200
 			orientation = "H"
 		end
 		if newOrientation == "V" then
 			box.POPUP_WIDTH = 275
-			box.POPUP_HEIGHT = 800
+			box.POPUP_HEIGHT = 950
 			orientation = "V"
 		end
 	end
 	
 	local function setupBox(formWindow)
 		if orientation == "S" then
-			local pokemon1 = forms.pictureBox(formWindow, 50, 50, 125, 1)
+			local pokemon1 = forms.pictureBox(formWindow, 25, 10, 125, 1)
 			box.party[1] = pokemon1		
 		elseif orientation == "V" then
-			local pokemon1 = forms.pictureBox(formWindow, 25, 1, 125, 120)
-			local pokemon2 = forms.pictureBox(formWindow, 25, 130, 125, 120)
-			local pokemon3 = forms.pictureBox(formWindow, 25, 260, 125, 120)
-			local pokemon4 = forms.pictureBox(formWindow, 25, 390, 125, 120)
-			local pokemon5 = forms.pictureBox(formWindow, 25, 520, 125, 120)
-			local pokemon6 = forms.pictureBox(formWindow, 25, 650, 125, 120)
+			local pokemon1 = forms.pictureBox(formWindow, 25, 1, 130, 120)
+			local pokemon2 = forms.pictureBox(formWindow, 25, 150, 130, 120)
+			local pokemon3 = forms.pictureBox(formWindow, 25, 280, 130, 120)
+			local pokemon4 = forms.pictureBox(formWindow, 25, 450, 130, 120)
+			local pokemon5 = forms.pictureBox(formWindow, 25, 610, 130, 120)
+			local pokemon6 = forms.pictureBox(formWindow, 25, 750, 130, 120)
 		
 			box.party[1] = pokemon1
 			box.party[2] = pokemon2
@@ -136,12 +134,12 @@ local function AnimationPopout(initialProgram, initialSettings)
 			box.party[5] = pokemon5
 			box.party[6] = pokemon6
 		else
-			local pokemon1 = forms.pictureBox(formWindow, 5, 5, 125, 1)
-			local pokemon2 = forms.pictureBox(formWindow, 130, 5, 125, 1)
-			local pokemon3 = forms.pictureBox(formWindow, 255, 5, 125, 1)
-			local pokemon4 = forms.pictureBox(formWindow, 380, 5, 125, 1)
-			local pokemon5 = forms.pictureBox(formWindow, 505, 5, 125, 1)
-			local pokemon6 = forms.pictureBox(formWindow, 630, 5, 125, 1)
+			local pokemon1 = forms.pictureBox(formWindow, 10, 5, 220, 1)
+			local pokemon2 = forms.pictureBox(formWindow, 230, 5, 220, 1)
+			local pokemon3 = forms.pictureBox(formWindow, 450, 5, 220, 1)
+			local pokemon4 = forms.pictureBox(formWindow, 670, 5, 220, 1)
+			local pokemon5 = forms.pictureBox(formWindow, 890, 5, 220, 1)
+			local pokemon6 = forms.pictureBox(formWindow, 1110, 5, 220, 1)
 		
 			box.party[1] = pokemon1
 			box.party[2] = pokemon2
@@ -150,6 +148,17 @@ local function AnimationPopout(initialProgram, initialSettings)
 			box.party[5] = pokemon5
 			box.party[6] = pokemon6			
 		end
+	end
+	
+	--unused, but created to attempt recreation of box to avoid resizing issues
+	local function recreatePBox(pbox, pos)
+		local pboxX = tonumber(forms.getproperty(pbox, "Left"))
+		local pboxY = tonumber(forms.getproperty(pbox, "Top"))
+		local path = forms.getproperty(pbox, "ImageLocation")
+		local window = box.formWindow
+		local newBox = forms.pictureBox(window, pboxX, pboxY, 1, 1)
+		forms.clearImageCache(pbox)
+		box.party[pos] = newBox
 	end
 	
 	function self.setupAnimatedPictureBox()	
@@ -181,6 +190,7 @@ local function AnimationPopout(initialProgram, initialSettings)
 		setupBox(formWindow)
 	
 		created = true
+		program.forceAnimatedUpdateBypass()
 	end
 	
 	local function setAnimatedPokemon(pokemonID, pos)
@@ -196,37 +206,41 @@ local function AnimationPopout(initialProgram, initialSettings)
 			
 			if pokemonID == 0 then
 				forms.setproperty(pbox, "Visible", false)
+				relocate[pos] = false
+				return
 			end
 			
 			if pokemonData ~= nil then
-				-- Track this ID so we don't have to preform as many checks later
 				box.pokemonID[pos] = pokemonID
 	
 				local lowerPokemonName = pokemonData.name:lower()
 				local imagepath = Paths.FOLDERS.ANIMATIONS_FOLDER .. "\\" .. lowerPokemonName .. ".gif"
 				local fileExists = fileExists(imagepath)
 				if fileExists then
-					forms.setproperty(pbox, "ImageLocation", imagepath)
-					forms.setproperty(pbox, "Visible", true)
 					if orientation == "H" or orientation == "S" then
 						forms.setproperty(pbox, "Height", 1)
-						relocate[pos] = true
 					end
-					
-					forms.setproperty(pbox, "AutoSize", 2) -- allows for relocate method to 'load' images bottom first
+					forms.setproperty(pbox, "Width", 1)
+					forms.clear(pbox, box.TRANSPARENCY_COLOR)
+					forms.setproperty(pbox, "ImageLocation", imagepath)
 					forms.refresh(pbox)
-					partyChanged = true
-					box.pokemonNames[pos] = lowerPokemonName
+					forms.setproperty(pbox, "AutoSize", 2)
+					relocate[pos] = true
 				end
 			end
 		end
 	end
 	
-	function self.animateParty(playerParty)
-		for p=1, maxAni, 1 do
-			setAnimatedPokemon(playerParty[p], p)
+	function self.animatePokemon(mon, monPos)
+		setAnimatedPokemon(mon, monPos)
+	end
+	
+	function self.refreshMon(pos)
+		local refresh = relocate[pos]
+		if not refresh then
+			local pbox = box.party[pos]
+			forms.refresh(pbox)			
 		end
-			
 	end
 	
 	function self.refreshAnimations()
@@ -241,16 +255,23 @@ local function AnimationPopout(initialProgram, initialSettings)
 		-- If the image is the same, then attempt to relocate it based on it's height
 		local imageY = tonumber(forms.getproperty(pbox, "Top"))
 		local imageHeight = tonumber(forms.getproperty(pbox, "Height"))
+		local relocated = false
 	
 		-- Only relocate exactly once, 1=starting height of the box
 		if imageY ~= nil and imageHeight ~= nil then
-			local bottomUpY = box.POPUP_HEIGHT - imageHeight - 40
-					-- If picture box hasn't been relocated yet, move it such that it's drawn from the bottom up
-			if bottomUpY ~= imageY then
-				forms.setproperty(pbox, "Top", bottomUpY)
-				relocate[pos] = (imageHeight == 1) -- Keep updating until the height is known
+			local bottomUpY
+			if orientation == "H" or orientation == "S" then
+				bottomUpY = box.POPUP_HEIGHT - imageHeight - 40
+				if bottomUpY ~= imageY then
+					forms.setproperty(pbox, "Top", bottomUpY)
+					relocate[pos] = (imageHeight == 1)
+				end
+			end
+			if orientation == "V" then
+				relocate[pos] = false
 			end
 		end
+		forms.setproperty(pbox, "Visible", true)
 	end
 	
 	return self

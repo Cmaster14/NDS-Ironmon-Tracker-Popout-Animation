@@ -76,7 +76,7 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local tourneyTracker
 	local pokemonThemeManager = PokemonThemeManager(settings, self)
 	local animatedPokemon = AnimationPopout(self, settings)
-	local playerParty = {{0,0,0,0,0,0}, "0"}
+	local playerParty = {0,0,0,0,0,0}--{{0,0,0,0,0,0}, "0"}
 	local animatedUpdateBypass = false
 	local ignoreValidation = false
 
@@ -390,30 +390,20 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local function getFullPlayerParty()
 		local membase = memoryAddresses.playerBase
 		local party = {}
-		local partyCompare = ""
-		for p = 1, 6, 1 do
-			pokemonDataReader.setCurrentBase(membase)
-			local mon = pokemonDataReader.decryptPokemonInfo(false, p-1, false)
+		for monIndex = 0, 5, 1 do
+			pokemonDataReader.setCurrentBase(membase + monIndex * gameInfo.ENCRYPTED_POKEMON_SIZE)
+			local mon = pokemonDataReader.decryptPokemonInfo(false, monIndex, false)
+			local pos = monIndex + 1
 			if not ignoreValidation then
 				local id = mon.pokemonID
-				party[p] = id
-				if id == nil then
-					id = 0
-				end
-				partyCompare = partyCompare .. id
+				party[pos] = id
 			else
-				local playerMon = playerParty[1][p]
-				party[p] = playerMon
-				if playerMon == nil then
-					playerPokemon = 0
-				end
-				partyCompare = partyCompare .. playerMon
+				local playerMon = playerParty[pos]
+				party[pos] = playerMon
 			end
-			-- need to change currentBase in order to decrypt.
-			membase = membase + gameInfo.ENCRYPTED_POKEMON_SIZE
 			ignoreValidation = false
 		end
-		return {party, partyCompare}
+		return party
 	end
 
 	function self.checkForAlternateForm(pokemon)
@@ -493,29 +483,26 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	
 	local function updateAnimatedPopout()
 		local boxMade = animatedPokemon.getCreated()
+		if not boxMade then
+			animatedPokemon.setupAnimatedPictureBox()
+		end
 		local maxAni = animatedPokemon.getMaxAni()
 		local party = getFullPlayerParty()
 		for b=1, maxAni, 1 do
-			if animatedPokemon.requiresRelocating(b) then 
-				animatedUpdateBypass = true
-				break
+			if party[b] ~= playerParty[b] or animatedUpdateBypass then
+				playerParty[b] = party[b]
+				animatedPokemon.animatePokemon(party[b], b)
 			end
 		end
-		if party[2] ~= playerParty[2] or animatedUpdateBypass then
-			playerParty = party
-			if not boxMade then
-				animatedPokemon.setupAnimatedPictureBox()
-			else
-				for p=1, maxAni, 1 do
-					if animatedPokemon.requiresRelocating(p) then
-						-- this should make it so that pokemon are rendered from the bottom up
-						animatedPokemon.relocateAnimatedPokemon(p)
-					end
-				end
+		animatedUpdateBypass = false
+		
+		for p=1, maxAni, 1 do
+			if animatedPokemon.requiresRelocating(p) then
+				-- this should make it so that pokemon are rendered from the bottom up
+				animatedPokemon.relocateAnimatedPokemon(p)
+				animatedPokemon.refreshMon(p)
 			end
-			animatedPokemon.animateParty(party[1])
-			animatedUpdateBypass = false
-		end
+		end		
 	end
 
 	local function getPokemonToDraw()
