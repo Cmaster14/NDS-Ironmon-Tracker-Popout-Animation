@@ -15,12 +15,13 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 	local tracker = initialTracker
 	local program = initialProgram
 	local tourneyTracker
+	local animatedPokemon
 
 	local self = {}
 
 	local constants = {
-		MAIN_FRAME_HEIGHT = 180,
-		EXTRAS_HEIGHT = 126,
+		MAIN_FRAME_HEIGHT = 290,
+		EXTRAS_HEIGHT = 230,
 		EXTRA_ENTRY_TITLE_ROW_HEIGHT = 21,
 		EXTRA_ENTRY_TEXT_ROW_HEIGHT = 10,
 		EXTRA_WIDTH = 124,
@@ -39,7 +40,21 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 				"for Crozwords' tourneys."
 			},
 			settingsKey = "tourneyTracker"
+		},
+		{
+			name = "Animation Popout",
+			iconImage = "special2.png",
+			descriptionRows = {
+				"Create animated popout",
+				"for lead or party."
+			},
+			settingsKey = "animationPopout",
+			leadKey = "animateLead",
+			partyKey = "animateParty",
+			horizKey = "animateHoriz",
+			vertKey = "animateVert"
 		}
+			
 	}
 
 	local function onToggleClick(button)
@@ -47,7 +62,47 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 		if settings.tourneyTracker.ENABLED then
 			tourneyTracker.loadData()
 		end
+		if settings.animationPopout.ENABLED then
+			animatedPokemon.show()
+		else
+			animatedPokemon.hide()
+		end
 		program.drawCurrentScreens()
+	end
+	
+	local function animationToggleUpdates()
+		program.drawCurrentScreens()
+		animatedPokemon.setupAnimatedPictureBox()
+		animatedPokemon.refreshAnimations()
+		program.forceAnimatedUpdateBypass()
+	end
+	
+	local function onLeadToggleClick(button)
+		if settings.animateParty.ENABLED or not settings.animateLead.ENABLED then
+			button.onClick()
+		end
+		animationToggleUpdates()
+	end
+	
+	local function onPartyToggleClick(button)
+		if settings.animateLead.ENABLED or not settings.animateParty.ENABLED then
+			button.onClick()
+		end
+		animationToggleUpdates()
+	end
+	
+	local function onHorizToggleClick(button)
+		if settings.animateVert.ENABLED or not settings.animateHoriz.ENABLED then
+			button.onClick()
+		end
+		animationToggleUpdates()
+	end
+	
+	local function onVertToggleClick(button)
+		if settings.animateHoriz.ENABLED or not settings.animateVert.ENABLED then
+			button.onClick()
+		end
+		animationToggleUpdates()
 	end
 
 	local function initBottomFrame()
@@ -164,6 +219,35 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 			Layout(Graphics.ALIGNMENT_TYPE.HORIZONTAL, 2, {x = 2, y = 4}),
 			extraFrame
 		)
+		local leadFrame = nil
+		local partyFrame = nil
+		if extra.name == "Animation Popout" then
+			extraFrame.resize({width = constants.EXTRA_WIDTH, height = constants.EXTRA_HEIGHT + 25})
+			leadFrame = 
+				Frame(
+				Box({x = 0, y = 0}, {width = 0, height = 40}, nil, nil),
+				Layout(Graphics.ALIGNMENT_TYPE.HORIZONTAL, 2, {x = 5, y = 6}),
+				extraFrame
+			)
+			partyFrame = 
+				Frame(
+				Box({x = 0, y = 0}, {width = 0, height = 18}, nil, nil),
+				Layout(Graphics.ALIGNMENT_TYPE.HORIZONTAL, 0, {x = 55, y = 0}),
+				leadFrame
+			)
+			vertFrame = 
+				Frame(
+				Box({x = 0, y = 0}, {width = 0, height = 18}, nil, nil),
+				Layout(Graphics.ALIGNMENT_TYPE.HORIZONTAL, 0, {x = 4, y = 20}),
+				leadFrame
+			)
+			horizFrame = 
+				Frame(
+				Box({x = 0, y = 0}, {width = 0, height = 18}, nil, nil),
+				Layout(Graphics.ALIGNMENT_TYPE.HORIZONTAL, 0, {x = 51, y = 20}),
+				leadFrame
+			)
+		end
 		local toggle =
 			SettingToggleButton(
 			Component(
@@ -199,32 +283,178 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 				)
 			)
 		)
-		ui.controls.clearButton =
-			TextLabel(
-			Component(
-				extraFrame,
-				Box(
-					{x = 0, y = 0},
-					{width = 116, height = 18},
-					"Top box background color",
-					"Top box border color",
-					true,
-					"Top box background color"
-				)
-			),
-			TextField(
-				"Clear Tourney Scores",
-				{x = 17, y = 3},
-				TextStyle(
-					Graphics.FONT.DEFAULT_FONT_SIZE,
-					Graphics.FONT.DEFAULT_FONT_FAMILY,
-					"Top box text color",
-					"Top box background color"
+		if extra.name == "Tourney Tracker" then
+			ui.controls.clearButton =
+				TextLabel(
+				Component(
+					extraFrame,
+					Box(
+						{x = 0, y = 0},
+						{width = 116, height = 18},
+						"Top box background color",
+						"Top box border color",
+						true,
+						"Top box background color"
+					)
+				),
+				TextField(
+					"Clear Tourney Scores",
+					{x = 17, y = 3},
+					TextStyle(
+						Graphics.FONT.DEFAULT_FONT_SIZE,
+						Graphics.FONT.DEFAULT_FONT_FAMILY,
+						"Top box text color",
+						"Top box background color"
+					)
 				)
 			)
-		)
-
-		table.insert(eventListeners, MouseClickEventListener(ui.controls.clearButton, onClearClick))
+			table.insert(eventListeners, MouseClickEventListener(ui.controls.clearButton, onClearClick))
+		elseif extra.name == "Animation Popout" then
+			local lead =
+				SettingToggleButton(
+				Component(
+					leadFrame,
+					Box(
+						{x = 0, y = 0},
+						{width = constants.BUTTON_SIZE, height = constants.BUTTON_SIZE},
+						"Top box background color",
+						"Top box border color",
+						true,
+						"Top box background color"
+					)
+				),
+				settings[extra.leadKey],
+				"ENABLED",
+				nil,
+				false,
+				true,
+				program.saveSettings
+			)
+			table.insert(eventListeners, MouseClickEventListener(lead, onToggleClick, lead))
+			local leadLabel =
+				TextLabel(
+				Component(leadFrame, Box({x = 0, y = 0}, {width = 0, height = 0}, nil, nil, false)),
+				TextField(
+					"Lead",
+					{x = 0, y = 0},
+					TextStyle(
+						Graphics.FONT.DEFAULT_FONT_SIZE,
+						Graphics.FONT.DEFAULT_FONT_FAMILY,
+						"Top box text color",
+						"Top box background color"
+					)
+				)
+			)
+			local party =
+				SettingToggleButton(
+				Component(
+					partyFrame,
+					Box(
+						{x = 0, y = 0},
+						{width = constants.BUTTON_SIZE, height = constants.BUTTON_SIZE},
+						"Top box background color",
+						"Top box border color",
+						true,
+						"Top box background color"
+					)
+				),
+				settings[extra.partyKey],
+				"ENABLED",
+				nil,
+				false,
+				true,
+				program.saveSettings
+			)
+			table.insert(eventListeners, MouseClickEventListener(party, onToggleClick, party))
+			table.insert(eventListeners, MouseClickEventListener(party, onPartyToggleClick, lead)) --Have party and lead buttons turn each other off
+			table.insert(eventListeners, MouseClickEventListener(lead, onLeadToggleClick, party))
+			local partyLabel =
+				TextLabel(
+				Component(partyFrame, Box({x = 0, y = 0}, {width = 0, height = 0}, nil, nil, false)),
+				TextField(
+					"Party",
+					{x = 2, y = 0},
+					TextStyle(
+						Graphics.FONT.DEFAULT_FONT_SIZE,
+						Graphics.FONT.DEFAULT_FONT_FAMILY,
+						"Top box text color",
+						"Top box background color"
+					)
+				)
+			)
+			local horizontal =
+				SettingToggleButton(
+				Component(
+					horizFrame,
+					Box(
+						{x = 0, y = 0},
+						{width = constants.BUTTON_SIZE, height = constants.BUTTON_SIZE},
+						"Top box background color",
+						"Top box border color",
+						true,
+						"Top box background color"
+					)
+				),
+				settings[extra.horizKey],
+				"ENABLED",
+				nil,
+				false,
+				true,
+				program.saveSettings
+			)
+			table.insert(eventListeners, MouseClickEventListener(horizontal, onToggleClick, horizontal))
+			local horizLabel =
+				TextLabel(
+				Component(horizFrame, Box({x = 0, y = 0}, {width = 0, height = 0}, nil, nil, false)),
+				TextField(
+					"Horizontal",
+					{x = 2, y = 0},
+					TextStyle(
+						Graphics.FONT.DEFAULT_FONT_SIZE,
+						Graphics.FONT.DEFAULT_FONT_FAMILY,
+						"Top box text color",
+						"Top box background color"
+					)
+				)
+			)
+			local vertical =
+				SettingToggleButton(
+				Component(
+					vertFrame,
+					Box(
+						{x = 0, y = 0},
+						{width = constants.BUTTON_SIZE, height = constants.BUTTON_SIZE},
+						"Top box background color",
+						"Top box border color",
+						true,
+						"Top box background color"
+					)
+				),
+				settings[extra.vertKey],
+				"ENABLED",
+				nil,
+				false,
+				true,
+				program.saveSettings
+			)
+			table.insert(eventListeners, MouseClickEventListener(vertical, onToggleClick, vertical))
+			table.insert(eventListeners, MouseClickEventListener(vertical, onVertToggleClick, horizontal)) --Have vertical and horizontal buttons turn each other off
+			table.insert(eventListeners, MouseClickEventListener(horizontal, onHorizToggleClick, vertical))
+			local vertLabel =
+				TextLabel(
+				Component(vertFrame, Box({x = 0, y = 0}, {width = 0, height = 0}, nil, nil, false)),
+				TextField(
+					"Vertical",
+					{x = 2, y = 0},
+					TextStyle(
+						Graphics.FONT.DEFAULT_FONT_SIZE,
+						Graphics.FONT.DEFAULT_FONT_FAMILY,
+						"Top box text color",
+						"Top box background color"
+					)
+				)
+			)
+		end
 	end
 
 	local function initExtrasUI()
@@ -245,8 +475,9 @@ local function ExtrasScreen(initialSettings, initialTracker, initialProgram)
 		end
 	end
 
-	function self.injectExtraRelatedClasses(newTourneyTracker)
+	function self.injectExtraRelatedClasses(newTourneyTracker, newAnimatedPokemon)
 		tourneyTracker = newTourneyTracker
+		animatedPokemon = newAnimatedPokemon
 	end
 
 	local function initUI()

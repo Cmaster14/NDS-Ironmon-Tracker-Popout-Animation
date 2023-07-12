@@ -13,4 +13,5 @@ Paths.FOLDERS = {
     POKEMON_ICONS_FOLDER = "ironmon_tracker/images/pokemonIconSets",
     BROWS_IMAGES_FOLDER = "ironmon_tracker/images/brows",
     EXTRAS_FOLDER = "ironmon_tracker/extras",
+	ANIMATIONS_FOLDER = "ironmon_tracker/images/pokemonAnimated",
 }

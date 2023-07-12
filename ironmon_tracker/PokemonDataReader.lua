@@ -267,6 +267,7 @@ local function PokemonDataReader(initialProgram)
                 end
 
 				if not MiscUtils.validPokemonData(decryptedData) then
+					program.animationIgnorePokemonValidation()
 					return {}
 				end
                 if checkingParty then

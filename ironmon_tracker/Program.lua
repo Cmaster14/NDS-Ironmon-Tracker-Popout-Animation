@@ -23,6 +23,7 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local RestorePointsScreen = dofile(Paths.FOLDERS.UI_FOLDER .. "/RestorePointsScreen.lua")
 	local TourneyTrackerScreen = dofile(Paths.FOLDERS.UI_FOLDER .. "/TourneyTrackerScreen.lua")
 	local ExtrasScreen = dofile(Paths.FOLDERS.UI_FOLDER.."/ExtrasScreen.lua")
+	local AnimationPopout = dofile(Paths.FOLDERS.UI_FOLDER.."/AnimationPopout.lua")
 
 	local INI = dofile(Paths.FOLDERS.DATA_FOLDER .. "/Inifile.lua")
 	local PokemonDataReader = dofile(Paths.FOLDERS.DATA_FOLDER .. "/PokemonDataReader.lua")
@@ -74,6 +75,10 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 	local seedLogger
 	local tourneyTracker
 	local pokemonThemeManager = PokemonThemeManager(settings, self)
+	local animatedPokemon = AnimationPopout(self, settings)
+	local playerParty = {0,0,0,0,0,0}--{{0,0,0,0,0,0}, "0"}
+	local animatedUpdateBypass = false
+	local ignoreValidation = false
 
 	local currentScreens = {}
 
@@ -209,7 +214,8 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		TITLE_SCREEN = 18,
 		RESTORE_POINTS_SCREEN = 19,
 		TOURNEY_TRACKER_SCREEN = 20,
-		EXTRAS_SCREEN = 21
+		EXTRAS_SCREEN = 21,
+		ANIMATED_POPOUT = 22
 	}
 
 	self.UI_SCREEN_OBJECTS = {
@@ -234,7 +240,8 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		[self.UI_SCREENS.TITLE_SCREEN] = TitleScreen(settings, tracker, self),
 		[self.UI_SCREENS.RESTORE_POINTS_SCREEN] = RestorePointsScreen(settings, tracker, self),
 		[self.UI_SCREENS.TOURNEY_TRACKER_SCREEN] = TourneyTrackerScreen(settings, tracker, self),
-		[self.UI_SCREENS.EXTRAS_SCREEN] = ExtrasScreen(settings,tracker,self)
+		[self.UI_SCREENS.EXTRAS_SCREEN] = ExtrasScreen(settings,tracker,self),
+		[self.UI_SCREENS.ANIMATED_POPOUT] = AnimationPopout(self)
 	}
 
 	tourneyTracker =
@@ -244,7 +251,7 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 		self.UI_SCREEN_OBJECTS[self.UI_SCREENS.MAIN_SCREEN]
 	)
 
-	self.UI_SCREEN_OBJECTS[self.UI_SCREENS.EXTRAS_SCREEN].injectExtraRelatedClasses(tourneyTracker)
+	self.UI_SCREEN_OBJECTS[self.UI_SCREENS.EXTRAS_SCREEN].injectExtraRelatedClasses(tourneyTracker, animatedPokemon)
 
 	local function getScreenTotal()
 		local total = 0
@@ -375,6 +382,29 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 			return data
 		end
 	end
+	
+	function self.animationIgnorePokemonValidation()
+		ignoreValidation = true
+	end
+	
+	local function getFullPlayerParty()
+		local membase = memoryAddresses.playerBase
+		local party = {}
+		for monIndex = 0, 5, 1 do
+			pokemonDataReader.setCurrentBase(membase + monIndex * gameInfo.ENCRYPTED_POKEMON_SIZE)
+			local mon = pokemonDataReader.decryptPokemonInfo(false, monIndex, false)
+			local pos = monIndex + 1
+			if not ignoreValidation then
+				local id = mon.pokemonID
+				party[pos] = id
+			else
+				local playerMon = playerParty[pos]
+				party[pos] = playerMon
+			end
+			ignoreValidation = false
+		end
+		return party
+	end
 
 	function self.checkForAlternateForm(pokemon)
 		local data = PokemonData.POKEMON[pokemon.pokemonID + 1]
@@ -445,6 +475,34 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 				tracker.setFirstPokemon(playerPokemon)
 			end
 		end
+	end
+	
+	function self.forceAnimatedUpdateBypass()
+		animatedUpdateBypass = true
+	end
+	
+	local function updateAnimatedPopout()
+		local boxMade = animatedPokemon.getCreated()
+		if not boxMade then
+			animatedPokemon.setupAnimatedPictureBox()
+		end
+		local maxAni = animatedPokemon.getMaxAni()
+		local party = getFullPlayerParty()
+		for b=1, maxAni, 1 do
+			if party[b] ~= playerParty[b] or animatedUpdateBypass then
+				playerParty[b] = party[b]
+				animatedPokemon.animatePokemon(party[b], b)
+			end
+		end
+		animatedUpdateBypass = false
+		
+		for p=1, maxAni, 1 do
+			if animatedPokemon.requiresRelocating(p) then
+				-- this should make it so that pokemon are rendered from the bottom up
+				animatedPokemon.relocateAnimatedPokemon(p)
+				animatedPokemon.refreshMon(p)
+			end
+		end		
 	end
 
 	local function getPokemonToDraw()
@@ -564,6 +622,9 @@ local function Program(initialTracker, initialMemoryAddresses, initialGameInfo, 
 			self.drawCurrentScreens()
 		end
 		tourneyTracker.updateMilestones(battleHandler.getDefeatedTrainers(), currentMapID)
+		if settings.animationPopout.ENABLED then
+			updateAnimatedPopout()
+		end
 	end
 
 	function self.openUpdaterScreen()
