@@ -15,7 +15,8 @@ This is a change to add the Animated Popout functionality to the existing BizHaw
 
 - **Full Party Vertical**
   
-![image](https://github.com/Cmaster14/NDS-Ironmon-Tracker-Popout-Animation/assets/5489901/383ba43d-279c-41d4-a6ef-d6db0b5d762c)
+![image](https://github.com/Cmaster14/NDS-Ironmon-Tracker-Popout-Animation/assets/5489901/77885bc8-20d0-4bff-8983-302c18e81375)
+
 
 
 ## Menu Screen
