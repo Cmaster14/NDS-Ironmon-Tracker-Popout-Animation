@@ -6,12 +6,15 @@ This is a change to add the Animated Popout functionality to the existing BizHaw
 ## Modes
 
 - **Lead only**
+  
 ![image](https://github.com/Cmaster14/NDS-Ironmon-Tracker-Popout-Animation/assets/5489901/ea0907f0-347a-4a4f-ab15-63d5bd9e7ae8)
 
 - **Full Party Horizontal**
+  
 ![image](https://github.com/Cmaster14/NDS-Ironmon-Tracker-Popout-Animation/assets/5489901/ecb9b96e-c359-4884-bf8b-6c3697f5c909)
 
 - **Full Party Vertical**
+  
 ![image](https://github.com/Cmaster14/NDS-Ironmon-Tracker-Popout-Animation/assets/5489901/383ba43d-279c-41d4-a6ef-d6db0b5d762c)
 
 
