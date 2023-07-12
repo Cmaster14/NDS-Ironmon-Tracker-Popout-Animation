@@ -3,6 +3,10 @@
 
 This is a change to add the Animated Popout functionality to the existing BizHawk Ironmon Tracker on the main branch
 
+**Warning: Party popout mode is known to crash BizHawk on repeated swapping of party members.
+	Various resizing issues may be observed, particularly when swapping a larger pokemon with a smaller one.
+ 	Resizing issues can be rezolved by reloading the lua script, but a crash could cause lost progress.**
+
 ## Modes
 
 - **Lead only**
